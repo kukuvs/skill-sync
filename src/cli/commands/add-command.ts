@@ -1,6 +1,6 @@
 import type { AddSkillUseCase } from "../../app/add-skill-use-case.js";
 import { SkillSyncUseCaseFactory } from "../../app/skill-sync-use-case-factory.js";
-import { type CliOptions, loadConfig } from "../runtime-config.js";
+import { RuntimeConfigLoader, type CliOptions } from "../runtime-config.js";
 import type { Logger } from "../../shared/logger.js";
 import type { RuntimeConfig } from "../runtime-config.js";
 
@@ -20,6 +20,6 @@ export async function addCommand(
   logger: Logger,
   dependencies: AddCommandDependencies = defaultDependencies
 ): Promise<void> {
-  const config = await loadConfig(options);
+  const config = await new RuntimeConfigLoader().load(options);
   await dependencies.createUseCase(config, logger).execute(skillPath);
 }
