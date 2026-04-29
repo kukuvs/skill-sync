@@ -1,4 +1,5 @@
 import { BitbucketClient } from "../bitbucket.js";
+import { listSkillCandidates } from "../catalog.js";
 import type { CliOptions } from "../config.js";
 import { loadConfig } from "../config.js";
 import { downloadSkill } from "../downloader.js";
@@ -13,7 +14,7 @@ export async function searchCommand(
 ): Promise<void> {
   const config = await loadConfig(options);
   const client = new BitbucketClient(config);
-  const allDirectories = await client.listDirectoriesRecursive();
+  const allDirectories = await listSkillCandidates(client);
   const normalizedFilter = filter?.trim().toLocaleLowerCase();
   const candidates = normalizedFilter
     ? allDirectories.filter((item) => item.toLocaleLowerCase().includes(normalizedFilter))

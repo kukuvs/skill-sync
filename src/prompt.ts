@@ -1,6 +1,8 @@
 import readline from "node:readline";
 import { stdin as input, stdout as output } from "node:process";
 
+import { SkillSyncError } from "./errors.js";
+
 export async function askText(question: string): Promise<string> {
   const rl = readline.createInterface({ input, output });
 
@@ -15,7 +17,7 @@ export async function askText(question: string): Promise<string> {
 
 export async function askSecret(question: string): Promise<string> {
   if (!input.isTTY) {
-    return askText(question);
+    throw new SkillSyncError("Secret prompts require a TTY. Set BITBUCKET_TOKEN instead.");
   }
 
   output.write(question);

@@ -1,7 +1,7 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { BitbucketClient, BitbucketEntry } from "./bitbucket.js";
+import type { BitbucketEntry } from "./bitbucket.js";
 import type { Logger } from "./logger.js";
 import { normalizeSkillPath, resolveInside } from "./paths.js";
 
@@ -11,16 +11,24 @@ export interface DownloadSummary {
   skillPath: string;
 }
 
+export interface SkillSource {
+  downloadFile(filePath: string): Promise<Uint8Array>;
+  listDirectory(directoryPath: string): Promise<BitbucketEntry[]>;
+}
+
 export async function downloadSkill(
-  client: BitbucketClient,
+  client: SkillSource,
   cwd: string,
   rawSkillPath: string,
   logger: Logger
 ): Promise<DownloadSummary> {
   const skillPath = normalizeSkillPath(rawSkillPath);
-  const skillRoot = resolveInside(path.join(cwd, ".skill"), skillPath);
+  const skillsRoot = path.join(cwd, ".skill");
+  const skillRoot = resolveInside(skillsRoot, skillPath);
+  const skillParent = path.dirname(skillRoot);
 
-  await mkdir(skillRoot, { recursive: true });
+  await mkdir(skillParent, { recursive: true });
+  const stagingRoot = await mkdtemp(path.join(skillParent, ".tmp-skill-sync-"));
 
   const summary: DownloadSummary = {
     directories: 1,
@@ -28,12 +36,19 @@ export async function downloadSkill(
     skillPath
   };
 
-  await downloadDirectory(client, skillPath, skillRoot, skillPath, logger, summary);
-  return summary;
+  try {
+    await downloadDirectory(client, skillPath, stagingRoot, skillPath, logger, summary);
+    await rm(skillRoot, { recursive: true, force: true });
+    await rename(stagingRoot, skillRoot);
+    return summary;
+  } catch (error) {
+    await rm(stagingRoot, { recursive: true, force: true });
+    throw error;
+  }
 }
 
 async function downloadDirectory(
-  client: BitbucketClient,
+  client: SkillSource,
   sourceDirectory: string,
   localRoot: string,
   skillPath: string,

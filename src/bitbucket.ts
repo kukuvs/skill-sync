@@ -78,9 +78,11 @@ export class BitbucketClient {
   }
 
   private sourceUrl(pathname: string, query: Record<string, string> = {}): string {
-    const sourcePath = [encodeURIComponent(this.options.ref), encodePath(pathname)]
-      .filter(Boolean)
-      .join("/");
+    const encodedPath = encodePath(pathname);
+    const sourcePath =
+      encodedPath.length > 0
+        ? `${encodeURIComponent(this.options.ref)}/${encodedPath}`
+        : `${encodeURIComponent(this.options.ref)}/`;
     const url = new URL(`${this.apiBase}/src/${sourcePath}`);
 
     for (const [key, value] of Object.entries(query)) {

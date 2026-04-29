@@ -17,7 +17,7 @@ program
   .version("0.1.0")
   .option("--repo <url>", "Bitbucket repository URL")
   .option("--token <token>", "Bitbucket HTTP access token")
-  .option("--ref <ref>", "Bitbucket branch, tag or commit", "main")
+  .option("--ref <ref>", "Bitbucket branch, tag or commit")
   .option("--cwd <path>", "Project directory", process.cwd());
 
 program
