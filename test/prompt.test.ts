@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { askSecret } from "../src/prompt.js";
+import { askSecret } from "../src/infrastructure/terminal/prompt.js";
 
 void test("askSecret rejects non-TTY input instead of echoing a token prompt", async () => {
   const descriptor = Object.getOwnPropertyDescriptor(process.stdin, "isTTY");

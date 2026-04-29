@@ -7,7 +7,7 @@ interface PackageMetadata {
 }
 
 export function readPackageVersion(
-  packageFile = new URL("../../package.json", import.meta.url)
+  packageFile = new URL("../../../package.json", import.meta.url)
 ): string {
   const rawPackage = readFileSync(packageFile, "utf8");
   const parsed = JSON.parse(rawPackage) as unknown;

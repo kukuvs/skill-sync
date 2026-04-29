@@ -1,16 +1,21 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { SkillSyncError } from "./errors.js";
-import { normalizeSkillPath } from "./paths.js";
+import { SkillSyncError } from "../shared/errors.js";
+import { normalizeSkillPath } from "../shared/skill-path.js";
 
 export interface SkillLock {
   skills: string[];
 }
 
+export interface SkillLockStoreLike {
+  add(skillPaths: string[]): Promise<SkillLock>;
+  read(): Promise<SkillLock>;
+}
+
 const lockFileName = "skill-lock.json";
 
-export class SkillLockStore {
+export class SkillLockStore implements SkillLockStoreLike {
   constructor(private readonly cwd: string) {}
 
   get path(): string {
@@ -57,22 +62,6 @@ export class SkillLockStore {
     await this.write(lock);
     return lock;
   }
-}
-
-export function getLockFilePath(cwd: string): string {
-  return new SkillLockStore(cwd).path;
-}
-
-export async function readSkillLock(cwd: string): Promise<SkillLock> {
-  return new SkillLockStore(cwd).read();
-}
-
-export async function writeSkillLock(cwd: string, lock: SkillLock): Promise<void> {
-  await new SkillLockStore(cwd).write(lock);
-}
-
-export async function addSkillsToLock(cwd: string, skillPaths: string[]): Promise<SkillLock> {
-  return new SkillLockStore(cwd).add(skillPaths);
 }
 
 function isSkillLock(value: unknown): value is SkillLock {

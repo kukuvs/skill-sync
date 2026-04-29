@@ -1,7 +1,7 @@
 import readline from "node:readline";
 import { stdin as input, stdout as output } from "node:process";
 
-import { SkillSyncError } from "./errors.js";
+import { SkillSyncError } from "../../shared/errors.js";
 
 export async function askText(question: string): Promise<string> {
   const rl = readline.createInterface({ input, output });

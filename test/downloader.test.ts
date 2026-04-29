@@ -3,8 +3,8 @@ import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import type { BitbucketEntry } from "../src/bitbucket.js";
-import { downloadSkill, type SkillSource } from "../src/downloader.js";
+import type { BitbucketEntry } from "../src/infrastructure/bitbucket-client.js";
+import { SkillDownloader, type SkillSource } from "../src/infrastructure/skill-downloader.js";
 
 void test("downloadSkill replaces stale local files with upstream content", async () => {
   const cwd = await makeTempProject("download-clean-");
@@ -24,7 +24,7 @@ void test("downloadSkill replaces stale local files with upstream content", asyn
       ]
     });
 
-    await downloadSkill(source, cwd, "разработка/x-uikit", noopLogger);
+    await new SkillDownloader(source, cwd, noopLogger).download("разработка/x-uikit");
 
     assert.equal(await readFile(path.join(skillRoot, "README.md"), "utf8"), "readme");
     assert.equal(await readFile(path.join(skillRoot, "button", "index.ts"), "utf8"), "button");
@@ -45,7 +45,7 @@ void test("downloadSkill keeps existing files when staging download fails", asyn
     const source = new FailingSource();
 
     await assert.rejects(
-      downloadSkill(source, cwd, "разработка/x-uikit", noopLogger),
+      new SkillDownloader(source, cwd, noopLogger).download("разработка/x-uikit"),
       /network cut/
     );
     assert.equal(await readFile(path.join(skillRoot, "keep.txt"), "utf8"), "current");

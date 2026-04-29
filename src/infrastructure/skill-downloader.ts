@@ -1,9 +1,9 @@
 import { mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { BitbucketEntry } from "./bitbucket.js";
-import type { Logger } from "./logger.js";
-import { normalizeSkillPath, resolveInside } from "./paths.js";
+import type { BitbucketEntry } from "./bitbucket-client.js";
+import type { Logger } from "../shared/logger.js";
+import { normalizeSkillPath, resolveInside } from "../shared/skill-path.js";
 
 export interface DownloadSummary {
   directories: number;
@@ -16,7 +16,11 @@ export interface SkillSource {
   listDirectory(directoryPath: string): Promise<BitbucketEntry[]>;
 }
 
-export class SkillDownloader {
+export interface SkillDownloaderLike {
+  download(skillPath: string): Promise<DownloadSummary>;
+}
+
+export class SkillDownloader implements SkillDownloaderLike {
   constructor(
     private readonly client: SkillSource,
     private readonly cwd: string,
@@ -77,15 +81,6 @@ export class SkillDownloader {
       this.logger.warn(`Skill "${sourceDirectory}" is empty.`);
     }
   }
-}
-
-export async function downloadSkill(
-  client: SkillSource,
-  cwd: string,
-  rawSkillPath: string,
-  logger: Logger
-): Promise<DownloadSummary> {
-  return new SkillDownloader(client, cwd, logger).download(rawSkillPath);
 }
 
 function resolveLocalTarget(localRoot: string, skillPath: string, entry: BitbucketEntry): string {

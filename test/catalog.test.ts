@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import type { BitbucketEntry } from "../src/bitbucket.js";
-import { listSkillCandidates, type SkillCatalogSource } from "../src/catalog.js";
+import type { BitbucketEntry } from "../src/infrastructure/bitbucket-client.js";
+import { listSkillCandidates, type SkillCatalogSource } from "../src/app/list-skill-candidates.js";
 
 void test("listSkillCandidates skips grouping directories and keeps real skills", async () => {
   const source = new FakeCatalog({

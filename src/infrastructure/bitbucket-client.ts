@@ -1,5 +1,5 @@
-import { SkillSyncError } from "./errors.js";
-import type { BitbucketRepo } from "./config.js";
+import type { BitbucketRepo } from "../cli/runtime-config.js";
+import { SkillSyncError } from "../shared/errors.js";
 
 export interface BitbucketEntry {
   path: string;
@@ -56,25 +56,6 @@ export class BitbucketClient {
     }
 
     return new Uint8Array(await response.arrayBuffer());
-  }
-
-  async listDirectoriesRecursive(rootPath = ""): Promise<string[]> {
-    const result: string[] = [];
-    const stack = [rootPath];
-
-    while (stack.length > 0) {
-      const current = stack.pop() ?? "";
-      const entries = await this.listDirectory(current);
-
-      for (const entry of entries) {
-        if (entry.type === "commit_directory") {
-          result.push(entry.path);
-          stack.push(entry.path);
-        }
-      }
-    }
-
-    return result.sort((left, right) => left.localeCompare(right));
   }
 
   private sourceUrl(pathname: string, query: Record<string, string> = {}): string {
