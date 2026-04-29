@@ -3,16 +3,17 @@ import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { addSkillsToLock, readSkillLock } from "../src/lockfile.js";
+import { SkillLockStore } from "../src/infrastructure/skill-lock-store.js";
 
 void test("addSkillsToLock keeps insertion order and skips duplicates", async () => {
   const cwd = await makeTempProject("lock-order-");
 
   try {
-    await addSkillsToLock(cwd, ["разработка/x-uikit", "тестирование/jest-config"]);
-    await addSkillsToLock(cwd, ["разработка/x-uikit", "разработка/x-uikit/button"]);
+    const store = new SkillLockStore(cwd);
+    await store.add(["разработка/x-uikit", "тестирование/jest-config"]);
+    await store.add(["разработка/x-uikit", "разработка/x-uikit/button"]);
 
-    const lock = await readSkillLock(cwd);
+    const lock = await store.read();
     assert.deepEqual(lock.skills, [
       "разработка/x-uikit",
       "тестирование/jest-config",
@@ -27,9 +28,10 @@ void test("addSkillsToLock normalizes valid user-entered separators", async () =
   const cwd = await makeTempProject("lock-normalize-");
 
   try {
-    await addSkillsToLock(cwd, ["\\разработка\\x-uikit\\button\\"]);
+    const store = new SkillLockStore(cwd);
+    await store.add(["\\разработка\\x-uikit\\button\\"]);
 
-    const lock = await readSkillLock(cwd);
+    const lock = await store.read();
     assert.deepEqual(lock.skills, ["разработка/x-uikit/button"]);
   } finally {
     await rm(cwd, { recursive: true, force: true });
@@ -46,7 +48,7 @@ void test("readSkillLock rejects malformed lock content", async () => {
       "utf8"
     );
 
-    await assert.rejects(readSkillLock(cwd), /must contain a "skills" string array/);
+    await assert.rejects(new SkillLockStore(cwd).read(), /must contain a "skills" string array/);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }

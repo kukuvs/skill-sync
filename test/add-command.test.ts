@@ -1,52 +1,29 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { SkillSyncService } from "../src/skill-sync-service.js";
+import { AddSkillUseCase } from "../src/app/add-skill-use-case.js";
 
-void test("SkillSyncService keeps lock intact when add download fails", async () => {
-  const lockStore = new InMemoryLockStore(["existing/skill"]);
-  const downloader = new FailingDownloader();
+void test("AddSkillUseCase keeps lock intact when download fails", async () => {
+  const context = createContext();
+  const useCase = new AddSkillUseCase(context);
 
-  const service = new SkillSyncService(
-    {
-      cwd: process.cwd(),
-      ref: "main",
-      repo: { workspace: "team", repoSlug: "skills-repo" },
-      token: "token"
-    },
-    noopLogger,
-    {
-      createClient() {
-        return new FakeClient();
-      },
-      createDownloader() {
-        return downloader;
-      },
-      createLockStore() {
-        return lockStore;
-      },
-      listCandidates() {
-        return Promise.resolve([]);
-      },
-      selectMany() {
-        return Promise.resolve([]);
-      }
-    }
-  );
-
-  await assert.rejects(service.add("missing/skill"), /download failed/);
-  assert.deepEqual(lockStore.skills, ["existing/skill"]);
-  assert.equal(lockStore.addCalls, 0);
+  await assert.rejects(useCase.execute("missing/skill"), /download failed/);
+  assert.deepEqual(context.lockStore.skills, ["existing/skill"]);
+  assert.equal(context.lockStore.addCalls, 0);
 });
 
-class FakeClient {
-  downloadFile(): Promise<Uint8Array> {
-    return Promise.resolve(new Uint8Array());
-  }
-
-  listDirectory(): Promise<[]> {
-    return Promise.resolve([]);
-  }
+function createContext() {
+  return {
+    downloader: new FailingDownloader(),
+    lockStore: new InMemoryLockStore(["existing/skill"]),
+    logger: noopLogger,
+    listSkillCandidates() {
+      return Promise.resolve([]);
+    },
+    selectMany() {
+      return Promise.resolve([]);
+    }
+  };
 }
 
 class FailingDownloader {

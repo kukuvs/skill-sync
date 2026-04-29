@@ -1,5 +1,5 @@
-import { askSecret, askText } from "./prompt.js";
-import { SkillSyncError } from "./errors.js";
+import { askSecret, askText } from "../infrastructure/terminal/prompt.js";
+import { SkillSyncError } from "../shared/errors.js";
 
 export interface CliOptions {
   cwd?: string;

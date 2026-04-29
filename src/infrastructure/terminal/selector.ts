@@ -2,6 +2,8 @@ import { stdin as input, stdout as output } from "node:process";
 
 import { askText } from "./prompt.js";
 
+export type SkillSelector = (items: string[], title: string) => Promise<string[]>;
+
 export async function selectMany(items: string[], title: string): Promise<string[]> {
   if (items.length === 0) {
     return [];

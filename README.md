@@ -72,7 +72,7 @@ skill-sync --cwd ./another-project add тестирование/jest-config
 
 `add` updates the lock file only after the skill has downloaded successfully. Downloads are staged first and then replace the target `.skill/<skill-path>` directory, so stale files from older upstream versions are removed.
 
-The command layer stays intentionally thin. `SkillSyncService` now owns the application workflow, while `SkillDownloader`, `SkillLockStore`, and `BitbucketClient` keep transport, filesystem, and storage concerns separate.
+The codebase is split into explicit layers: `cli` handles user input, `app` owns use-cases, `infrastructure` talks to Bitbucket and the filesystem, and `shared` keeps cross-cutting utilities small and obvious.
 
 ## Search behavior
 
@@ -83,15 +83,11 @@ The command layer stays intentionally thin. `SkillSyncService` now owns the appl
 ```text
 src/
   cli.ts
-  bitbucket.ts
-  config.ts
-  downloader.ts
-  lockfile.ts
-  paths.ts
-  prompt.ts
-  selector.ts
-  skill-sync-service.ts
-  commands/
+  app/
+  cli/
+  infrastructure/
+  shared/
+scripts/
 test/
 docs/
 tmp/
@@ -104,6 +100,7 @@ Temporary local work belongs in `tmp/`; the directory is ignored by git.
 ```bash
 pnpm run lint
 pnpm run format:check
+pnpm run build
 pnpm run test
 ```
 

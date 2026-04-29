@@ -2,13 +2,13 @@
 
 import { Command } from "commander";
 
-import { addCommand } from "./commands/add.js";
-import { searchCommand } from "./commands/search.js";
-import { syncCommand } from "./commands/sync.js";
-import type { CliOptions } from "./config.js";
-import { SkillSyncError, toErrorMessage } from "./errors.js";
-import { consoleLogger } from "./logger.js";
-import { readPackageVersion } from "./package-version.js";
+import { addCommand } from "./cli/commands/add-command.js";
+import { searchCommand } from "./cli/commands/search-command.js";
+import { syncCommand } from "./cli/commands/sync-command.js";
+import type { CliOptions } from "./cli/runtime-config.js";
+import { SkillSyncError, toErrorMessage } from "./shared/errors.js";
+import { consoleLogger } from "./shared/logger.js";
+import { readPackageVersion } from "./shared/package-version.js";
 
 const program = new Command();
 

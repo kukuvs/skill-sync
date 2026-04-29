@@ -4,21 +4,19 @@
 
 `skill-sync` is built around a small number of explicit boundaries:
 
-- CLI commands parse intent and coordinate work.
-- `SkillSyncService` owns the application use-cases for `add`, `sync`, and `search`.
-- `BitbucketClient` owns the REST API details.
-- `SkillDownloader` maps Bitbucket entries to local files.
-- `SkillLockStore` owns `skill-lock.json` parsing and writing.
-- `paths` keeps path normalization and write-safety checks in one place.
+- `cli` parses flags, env, prompts, and command intent.
+- `app` owns one use-case per file: `AddSkillUseCase`, `SyncSkillsUseCase`, `SearchSkillsUseCase`.
+- `infrastructure` owns Bitbucket transport, local file writes, lock storage, and terminal helpers.
+- `shared` keeps cross-cutting utilities such as path safety, errors, logging, and package metadata.
 
-The command layer stays thin: it loads runtime config and hands off to the service layer. The service layer does not know Bitbucket pagination details, and the API layer does not write to disk. That separation keeps the CLI easy to extend without turning command handlers into large scripts.
+The command layer stays thin: it loads runtime config, builds a context, and hands off to one use-case. The app layer does not know Bitbucket pagination details, and the infrastructure layer does not decide business flow. That separation keeps changes local instead of growing a single service object.
 
 ## Data flow
 
 ```text
 skill-sync add <path>
   -> load runtime config
-  -> SkillSyncService.add()
+  -> AddSkillUseCase.execute()
   -> SkillDownloader.download()
   -> replace .skill/<path>
   -> SkillLockStore.add()
@@ -27,7 +25,7 @@ skill-sync add <path>
 ```text
 skill-sync sync
   -> load runtime config
-  -> SkillSyncService.sync()
+  -> SyncSkillsUseCase.execute()
   -> SkillLockStore.read()
   -> replace every skill directory sequentially
 ```
@@ -35,7 +33,7 @@ skill-sync sync
 ```text
 skill-sync search [filter]
   -> load runtime config
-  -> SkillSyncService.search()
+  -> SearchSkillsUseCase.execute()
   -> list Bitbucket skill candidates recursively
   -> update skill-lock.json
   -> download selected skills
@@ -71,4 +69,4 @@ Near-term extensions can be added without changing the whole project:
 - Parallel downloads can be introduced inside `SkillDownloader` with a small concurrency limit.
 - Bitbucket Server support can live beside the current Bitbucket Cloud client.
 - Richer search metadata can be added by returning typed tree nodes instead of plain paths.
-- Alternate lock storage backends can be introduced by swapping the store implementation used by `SkillSyncService`.
+- Alternate lock storage backends can be introduced by swapping the store implementation in `SkillSyncContext`.

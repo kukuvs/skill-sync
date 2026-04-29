@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { loadConfig, parseBitbucketRepoUrl } from "../src/config.js";
+import { loadConfig, parseBitbucketRepoUrl } from "../src/cli/runtime-config.js";
 
 void test("parseBitbucketRepoUrl accepts Bitbucket Cloud repository URLs", () => {
   assert.deepEqual(parseBitbucketRepoUrl("https://bitbucket.org/team/skills-repo.git"), {

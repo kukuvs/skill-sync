@@ -1,8 +1,8 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { BitbucketEntry } from "../../src/bitbucket.js";
-import type { SkillSource } from "../../src/downloader.js";
+import type { BitbucketEntry } from "../../src/infrastructure/bitbucket-client.js";
+import type { SkillSource } from "../../src/infrastructure/skill-downloader.js";
 
 export class LocalSkillSource implements SkillSource {
   constructor(private readonly rootDir: string) {}

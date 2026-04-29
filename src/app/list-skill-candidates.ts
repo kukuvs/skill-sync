@@ -1,4 +1,4 @@
-import type { BitbucketEntry } from "./bitbucket.js";
+import type { BitbucketEntry } from "../infrastructure/bitbucket-client.js";
 
 export interface SkillCatalogSource {
   listDirectory(directoryPath: string): Promise<BitbucketEntry[]>;
