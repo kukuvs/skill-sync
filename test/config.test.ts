@@ -10,6 +10,13 @@ void test("parseBitbucketRepoUrl accepts Bitbucket Cloud repository URLs", () =>
   });
 });
 
+void test("parseBitbucketRepoUrl accepts trailing slashes", () => {
+  assert.deepEqual(parseBitbucketRepoUrl("https://bitbucket.org/team/skills-repo/"), {
+    workspace: "team",
+    repoSlug: "skills-repo"
+  });
+});
+
 void test("loadConfig prefers explicit ref, then BITBUCKET_REF, then main", async () => {
   const previousRepo = process.env.BITBUCKET_REPO_URL;
   const previousToken = process.env.BITBUCKET_TOKEN;
