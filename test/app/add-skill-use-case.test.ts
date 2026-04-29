@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { AddSkillUseCase } from "../src/app/add-skill-use-case.js";
-import type { SkillDownloaderPort } from "../src/app/ports/skill-downloader.js";
-import type { SkillLockStorePort } from "../src/app/ports/skill-lock-store.js";
-import type { Logger } from "../src/shared/logger.js";
+import { AddSkillUseCase } from "../../src/app/add-skill-use-case.js";
+import type { SkillDownloaderPort } from "../../src/app/ports/skill-downloader.js";
+import type { SkillLockStorePort } from "../../src/app/ports/skill-lock-store.js";
+import type { Logger } from "../../src/shared/logger.js";
 
 void test("AddSkillUseCase keeps lock intact when download fails", async () => {
   const lockStore = new InMemoryLockStore(["existing/skill"]);

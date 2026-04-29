@@ -90,6 +90,11 @@ src/
   shared/
 scripts/
 test/
+  app/
+  cli/
+  e2e/
+  infrastructure/
+  shared/
 docs/
 tmp/
 ```
@@ -105,7 +110,7 @@ pnpm run build
 pnpm run test
 ```
 
-Tests compile the TypeScript project and run Node's built-in test runner against `dist/test`.
+Tests compile the TypeScript project and run Node's built-in test runner against the full `dist/test/**` tree.
 
 ## More docs
 

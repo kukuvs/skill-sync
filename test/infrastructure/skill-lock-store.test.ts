@@ -3,7 +3,7 @@ import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { SkillLockStore } from "../src/infrastructure/skill-lock-store.js";
+import { SkillLockStore } from "../../src/infrastructure/skill-lock-store.js";
 
 void test("addSkillsToLock keeps insertion order and skips duplicates", async () => {
   const cwd = await makeTempProject("lock-order-");

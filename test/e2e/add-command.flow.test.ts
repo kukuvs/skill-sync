@@ -3,11 +3,11 @@ import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { AddSkillUseCase } from "../src/app/add-skill-use-case.js";
-import { addCommand } from "../src/cli/commands/add-command.js";
-import { SkillDownloader } from "../src/infrastructure/skill-downloader.js";
-import { SkillLockStore } from "../src/infrastructure/skill-lock-store.js";
-import { LocalSkillSource } from "./support/local-skill-source.js";
+import { AddSkillUseCase } from "../../src/app/add-skill-use-case.js";
+import { addCommand } from "../../src/cli/commands/add-command.js";
+import { SkillDownloader } from "../../src/infrastructure/skill-downloader.js";
+import { SkillLockStore } from "../../src/infrastructure/skill-lock-store.js";
+import { LocalSkillSource } from "../support/local-skill-source.js";
 
 void test("user adds a fixture skill into a clean project", async () => {
   const cwd = await makeTempProject("user-add-");

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { normalizeSkillPath, resolveInside } from "../src/shared/skill-path.js";
+import { normalizeSkillPath, resolveInside } from "../../src/shared/skill-path.js";
 
 void test("normalizeSkillPath accepts nested unicode paths", () => {
   assert.equal(normalizeSkillPath("/разработка/x-uikit/button/"), "разработка/x-uikit/button");

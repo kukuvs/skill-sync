@@ -3,8 +3,8 @@ import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import type { BitbucketEntry } from "../src/infrastructure/bitbucket-client.js";
-import { SkillDownloader, type SkillSource } from "../src/infrastructure/skill-downloader.js";
+import type { BitbucketEntry } from "../../src/infrastructure/bitbucket-client.js";
+import { SkillDownloader, type SkillSource } from "../../src/infrastructure/skill-downloader.js";
 
 void test("downloadSkill replaces stale local files with upstream content", async () => {
   const cwd = await makeTempProject("download-clean-");
