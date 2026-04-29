@@ -72,6 +72,8 @@ skill-sync --cwd ./another-project add тестирование/jest-config
 
 `add` updates the lock file only after the skill has downloaded successfully. Downloads are staged first and then replace the target `.skill/<skill-path>` directory, so stale files from older upstream versions are removed.
 
+The codebase is split into explicit layers: `cli` handles user input, `app` owns use-cases and ports, `infrastructure` implements adapters for Bitbucket/filesystem/input, and `shared` keeps cross-cutting utilities small and obvious.
+
 ## Search behavior
 
 `search` walks Bitbucket directories and shows skill candidates rather than every grouping folder. A directory is treated as a candidate when it contains files or has no child directories. This keeps top-level groups such as `разработка` out of the default selection list while still supporting nested skills like `разработка/x-uikit/button`.
@@ -81,15 +83,18 @@ skill-sync --cwd ./another-project add тестирование/jest-config
 ```text
 src/
   cli.ts
-  bitbucket.ts
-  config.ts
-  downloader.ts
-  lockfile.ts
-  paths.ts
-  prompt.ts
-  selector.ts
-  commands/
+  app/
+    ports/
+  cli/
+  infrastructure/
+  shared/
+scripts/
 test/
+  app/
+  cli/
+  e2e/
+  infrastructure/
+  shared/
 docs/
 tmp/
 ```
@@ -101,10 +106,11 @@ Temporary local work belongs in `tmp/`; the directory is ignored by git.
 ```bash
 pnpm run lint
 pnpm run format:check
+pnpm run build
 pnpm run test
 ```
 
-Tests compile the TypeScript project and run Node's built-in test runner against `dist/test`.
+Tests compile the TypeScript project and run Node's built-in test runner against the full `dist/test/**` tree.
 
 ## More docs
 

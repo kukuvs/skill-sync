@@ -4,38 +4,40 @@
 
 `skill-sync` is built around a small number of explicit boundaries:
 
-- CLI commands parse intent and coordinate work.
-- `BitbucketClient` owns the REST API details.
-- `downloader` maps Bitbucket entries to local files.
-- `lockfile` owns `skill-lock.json` parsing and writing.
-- `paths` keeps path normalization and write-safety checks in one place.
+- `cli` parses flags, env, prompts, and command intent.
+- `app` owns one use-case per file, plus the ports they depend on.
+- `infrastructure` owns Bitbucket transport, local file writes, lock storage, and input adapters that implement those ports.
+- `shared` keeps cross-cutting utilities such as path safety, errors, logging, and package metadata.
 
-The command layer does not know Bitbucket pagination details, and the API layer does not write to disk. That separation keeps the CLI easy to extend without turning command handlers into large scripts.
+The command layer stays thin: it loads runtime config, asks a factory for the right use-case, and hands off control. The app layer does not know Bitbucket pagination details, and the infrastructure layer does not decide business flow. That separation keeps changes local instead of growing a single service object or a loosely typed dependency bag.
 
 ## Data flow
 
 ```text
 skill-sync add <path>
-  -> normalize skill path
-  -> load Bitbucket config
-  -> list Bitbucket directory recursively
-  -> download files into a staging directory
+  -> load runtime config
+  -> SkillSyncUseCaseFactory.createAddSkillUseCase()
+  -> AddSkillUseCase.execute()
+  -> SkillDownloader.download()
   -> replace .skill/<path>
-  -> add path to skill-lock.json
+  -> SkillLockStore.add()
 ```
 
 ```text
 skill-sync sync
-  -> read skill-lock.json
-  -> load Bitbucket config only when there is work to do
+  -> load runtime config
+  -> SkillSyncUseCaseFactory.createSyncSkillsUseCase()
+  -> SyncSkillsUseCase.execute()
+  -> SkillLockStore.read()
   -> replace every skill directory sequentially
 ```
 
 ```text
 skill-sync search [filter]
-  -> list Bitbucket skill candidates recursively
-  -> filter locally
-  -> select many entries
+  -> load runtime config
+  -> SkillSyncUseCaseFactory.createSearchSkillsUseCase()
+  -> SearchSkillsUseCase.execute()
+  -> BitbucketSkillCatalog.listCandidates()
   -> update skill-lock.json
   -> download selected skills
 ```
@@ -60,13 +62,24 @@ Because replacement is atomic at the skill directory level, files deleted upstre
 
 ## Catalog filtering
 
-`search` uses `listSkillCandidates()` instead of exposing every directory. Directories with files are considered real skill candidates; empty leaf directories are also shown because Bitbucket repositories sometimes start with placeholder skills. Pure grouping directories with only child directories are skipped.
+`search` uses `BitbucketSkillCatalog` instead of exposing every directory. Directories with files are considered real skill candidates; empty leaf directories are also shown because Bitbucket repositories sometimes start with placeholder skills. Pure grouping directories with only child directories are skipped.
 
 ## Scaling points
 
 Near-term extensions can be added without changing the whole project:
 
-- Auth providers can be added behind `loadConfig()`.
-- Parallel downloads can be introduced inside `downloader` with a small concurrency limit.
+- Auth providers can be added behind `RuntimeConfigLoader`.
+- Parallel downloads can be introduced inside `SkillDownloader` with a small concurrency limit.
 - Bitbucket Server support can live beside the current Bitbucket Cloud client.
 - Richer search metadata can be added by returning typed tree nodes instead of plain paths.
+- Alternate lock storage backends can be introduced by swapping the store implementation injected by `SkillSyncUseCaseFactory`.
+
+## Test layout
+
+Tests are grouped by module boundary instead of staying in one flat folder:
+
+- `test/app` covers use-cases.
+- `test/cli` covers CLI-only concerns such as config loading.
+- `test/infrastructure` covers Bitbucket/filesystem/input adapters.
+- `test/shared` covers pure helpers.
+- `test/e2e` covers user-facing command flows with local fixtures.

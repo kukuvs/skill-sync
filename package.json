@@ -1,6 +1,6 @@
 {
   "name": "skill-sync",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "CLI for syncing shared agent skills from a Bitbucket repository.",
   "type": "module",
   "packageManager": "pnpm@10.33.2",
@@ -13,12 +13,13 @@
     "docs"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "check": "eslint . && prettier --check . && tsc -p tsconfig.json && node --test dist/test/*.test.js",
+    "build": "node ./scripts/clean-dist.mjs && tsc -p tsconfig.json",
+    "check": "eslint . && prettier --check . && pnpm run build && node ./scripts/run-tests.mjs",
+    "clean": "node ./scripts/clean-dist.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
-    "test": "tsc -p tsconfig.json && node --test dist/test/*.test.js"
+    "test": "pnpm run build && node ./scripts/run-tests.mjs"
   },
   "keywords": [
     "bitbucket",
