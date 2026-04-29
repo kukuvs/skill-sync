@@ -1,0 +1,44 @@
+{
+  "name": "skill-sync",
+  "version": "0.1.0",
+  "description": "CLI for syncing shared agent skills from a Bitbucket repository.",
+  "type": "module",
+  "packageManager": "pnpm@10.33.2",
+  "bin": {
+    "skill-sync": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "docs"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "eslint . && prettier --check . && tsc -p tsconfig.json && node --test dist/test/*.test.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "test": "tsc -p tsconfig.json && node --test dist/test/*.test.js"
+  },
+  "keywords": [
+    "bitbucket",
+    "cli",
+    "skills",
+    "sync"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.18"
+  },
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.12.0",
+    "@types/node": "^22.7.5",
+    "eslint": "^9.12.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.8.0"
+  }
+}
