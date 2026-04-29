@@ -33,6 +33,49 @@ void test("BitbucketClient follows paginated directory responses", async () => {
   }
 });
 
+void test("BitbucketClient requests root directories with a trailing slash", async () => {
+  let requestedUrl = "";
+  const restoreFetch = replaceFetch((url) => {
+    requestedUrl = url;
+    return jsonResponse({ values: [] });
+  });
+
+  try {
+    const client = new BitbucketClient({
+      ref: "main",
+      repo: { workspace: "team", repoSlug: "repo" },
+      token: "token"
+    });
+
+    await client.listDirectory("");
+    assert.match(requestedUrl, /\/src\/main\/\?pagelen=100$/);
+  } finally {
+    restoreFetch();
+  }
+});
+
+void test("BitbucketClient keeps nested directory URLs encoded", async () => {
+  let requestedUrl = "";
+  const restoreFetch = replaceFetch((url) => {
+    requestedUrl = url;
+    return jsonResponse({ values: [] });
+  });
+
+  try {
+    const client = new BitbucketClient({
+      ref: "main",
+      repo: { workspace: "team", repoSlug: "repo" },
+      token: "token"
+    });
+
+    await client.listDirectory("разработка/x-uikit");
+    assert.match(requestedUrl, /\/src\/main\/%D1%80%D0%B0%D0%B7/);
+    assert.match(requestedUrl, /\/x-uikit\?pagelen=100$/);
+  } finally {
+    restoreFetch();
+  }
+});
+
 void test("BitbucketClient ignores malformed directory entries", async () => {
   const restoreFetch = replaceFetch(() =>
     jsonResponse({
