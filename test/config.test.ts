@@ -17,6 +17,13 @@ void test("parseBitbucketRepoUrl accepts trailing slashes", () => {
   });
 });
 
+void test("parseBitbucketRepoUrl rejects non-Bitbucket hosts", () => {
+  assert.throws(
+    () => parseBitbucketRepoUrl("https://example.com/team/skills-repo"),
+    /must point to bitbucket\.org/
+  );
+});
+
 void test("loadConfig prefers explicit ref, then BITBUCKET_REF, then main", async () => {
   const previousRepo = process.env.BITBUCKET_REPO_URL;
   const previousToken = process.env.BITBUCKET_TOKEN;

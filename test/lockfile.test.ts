@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -31,6 +31,22 @@ void test("addSkillsToLock normalizes valid user-entered separators", async () =
 
     const lock = await readSkillLock(cwd);
     assert.deepEqual(lock.skills, ["разработка/x-uikit/button"]);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+void test("readSkillLock rejects malformed lock content", async () => {
+  const cwd = await makeTempProject("lock-invalid-");
+
+  try {
+    await writeFile(
+      path.join(cwd, "skill-lock.json"),
+      `${JSON.stringify({ skills: [123] })}\n`,
+      "utf8"
+    );
+
+    await assert.rejects(readSkillLock(cwd), /must contain a "skills" string array/);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
