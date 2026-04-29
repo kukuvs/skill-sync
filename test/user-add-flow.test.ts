@@ -3,7 +3,7 @@ import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { createSkillSyncContext } from "../src/app/skill-sync-context.js";
+import { AddSkillUseCase } from "../src/app/add-skill-use-case.js";
 import { addCommand } from "../src/cli/commands/add-command.js";
 import { SkillDownloader } from "../src/infrastructure/skill-downloader.js";
 import { SkillLockStore } from "../src/infrastructure/skill-lock-store.js";
@@ -19,11 +19,12 @@ void test("user adds a fixture skill into a clean project", async () => {
       { cwd, repo: repoUrl, token: "token" },
       noopLogger,
       {
-        createContext: (config, logger) => ({
-          ...createSkillSyncContext(config, logger),
-          downloader: new SkillDownloader(source, config.cwd, logger),
-          lockStore: new SkillLockStore(config.cwd)
-        })
+        createUseCase: (config, logger) =>
+          new AddSkillUseCase(
+            new SkillDownloader(source, config.cwd, logger),
+            new SkillLockStore(config.cwd),
+            logger
+          )
       }
     );
 

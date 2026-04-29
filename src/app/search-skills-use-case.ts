@@ -1,34 +1,44 @@
-import type { SkillSyncContext } from "./skill-sync-context.js";
+import type { SkillCatalogPort } from "./ports/skill-catalog.js";
+import type { SkillDownloaderPort } from "./ports/skill-downloader.js";
+import type { SkillLockStorePort } from "./ports/skill-lock-store.js";
+import type { SkillSelectorPort } from "./ports/skill-selector.js";
+import type { Logger } from "../shared/logger.js";
 
 export class SearchSkillsUseCase {
-  constructor(private readonly context: SkillSyncContext) {}
+  constructor(
+    private readonly catalog: SkillCatalogPort,
+    private readonly selector: SkillSelectorPort,
+    private readonly lockStore: SkillLockStorePort,
+    private readonly downloader: SkillDownloaderPort,
+    private readonly logger: Logger
+  ) {}
 
   async execute(filter: string | undefined): Promise<void> {
-    const allDirectories = await this.context.listSkillCandidates();
+    const allDirectories = await this.catalog.listCandidates();
     const normalizedFilter = filter?.trim().toLocaleLowerCase();
     const candidates = normalizedFilter
       ? allDirectories.filter((item) => item.toLocaleLowerCase().includes(normalizedFilter))
       : allDirectories;
 
     if (candidates.length === 0) {
-      this.context.logger.warn("No skills were found.");
+      this.logger.warn("No skills were found.");
       return;
     }
 
-    const selected = await this.context.selectMany(candidates, "Available skills");
+    const selected = await this.selector.selectMany(candidates, "Available skills");
 
     if (selected.length === 0) {
-      this.context.logger.warn("No skills selected.");
+      this.logger.warn("No skills selected.");
       return;
     }
 
-    await this.context.lockStore.add(selected);
+    await this.lockStore.add(selected);
 
     for (const skillPath of selected) {
-      this.context.logger.info(`Downloading ${skillPath}...`);
-      await this.context.downloader.download(skillPath);
+      this.logger.info(`Downloading ${skillPath}...`);
+      await this.downloader.download(skillPath);
     }
 
-    this.context.logger.info(`Added and downloaded ${selected.length} skill(s).`);
+    this.logger.info(`Added and downloaded ${selected.length} skill(s).`);
   }
 }

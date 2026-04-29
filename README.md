@@ -72,7 +72,7 @@ skill-sync --cwd ./another-project add тестирование/jest-config
 
 `add` updates the lock file only after the skill has downloaded successfully. Downloads are staged first and then replace the target `.skill/<skill-path>` directory, so stale files from older upstream versions are removed.
 
-The codebase is split into explicit layers: `cli` handles user input, `app` owns use-cases, `infrastructure` talks to Bitbucket and the filesystem, and `shared` keeps cross-cutting utilities small and obvious.
+The codebase is split into explicit layers: `cli` handles user input, `app` owns use-cases and ports, `infrastructure` implements adapters for Bitbucket/filesystem/terminal, and `shared` keeps cross-cutting utilities small and obvious.
 
 ## Search behavior
 
@@ -84,6 +84,7 @@ The codebase is split into explicit layers: `cli` handles user input, `app` owns
 src/
   cli.ts
   app/
+    ports/
   cli/
   infrastructure/
   shared/

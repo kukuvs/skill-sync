@@ -1,19 +1,20 @@
 import { stdin as input, stdout as output } from "node:process";
 
+import type { SkillSelectorPort } from "../../app/ports/skill-selector.js";
 import { askText } from "./prompt.js";
 
-export type SkillSelector = (items: string[], title: string) => Promise<string[]>;
+export class TerminalSkillSelector implements SkillSelectorPort {
+  async selectMany(items: string[], title: string): Promise<string[]> {
+    if (items.length === 0) {
+      return [];
+    }
 
-export async function selectMany(items: string[], title: string): Promise<string[]> {
-  if (items.length === 0) {
-    return [];
+    if (!input.isTTY || !output.isTTY) {
+      return selectByNumbers(items, title);
+    }
+
+    return selectWithKeyboard(items, title);
   }
-
-  if (!input.isTTY || !output.isTTY) {
-    return selectByNumbers(items, title);
-  }
-
-  return selectWithKeyboard(items, title);
 }
 
 async function selectByNumbers(items: string[], title: string): Promise<string[]> {

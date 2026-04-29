@@ -1,33 +1,24 @@
 import { mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import type { SkillDownloadSummary, SkillDownloaderPort } from "../app/ports/skill-downloader.js";
 import type { BitbucketEntry } from "./bitbucket-client.js";
 import type { Logger } from "../shared/logger.js";
 import { normalizeSkillPath, resolveInside } from "../shared/skill-path.js";
-
-export interface DownloadSummary {
-  directories: number;
-  files: number;
-  skillPath: string;
-}
 
 export interface SkillSource {
   downloadFile(filePath: string): Promise<Uint8Array>;
   listDirectory(directoryPath: string): Promise<BitbucketEntry[]>;
 }
 
-export interface SkillDownloaderLike {
-  download(skillPath: string): Promise<DownloadSummary>;
-}
-
-export class SkillDownloader implements SkillDownloaderLike {
+export class SkillDownloader implements SkillDownloaderPort {
   constructor(
     private readonly client: SkillSource,
     private readonly cwd: string,
     private readonly logger: Logger
   ) {}
 
-  async download(rawSkillPath: string): Promise<DownloadSummary> {
+  async download(rawSkillPath: string): Promise<SkillDownloadSummary> {
     const skillPath = normalizeSkillPath(rawSkillPath);
     const skillsRoot = path.join(this.cwd, ".skill");
     const skillRoot = resolveInside(skillsRoot, skillPath);
@@ -36,7 +27,7 @@ export class SkillDownloader implements SkillDownloaderLike {
     await mkdir(skillParent, { recursive: true });
     const stagingRoot = await mkdtemp(path.join(skillParent, ".tmp-skill-sync-"));
 
-    const summary: DownloadSummary = {
+    const summary: SkillDownloadSummary = {
       directories: 1,
       files: 0,
       skillPath
@@ -57,7 +48,7 @@ export class SkillDownloader implements SkillDownloaderLike {
     sourceDirectory: string,
     localRoot: string,
     skillPath: string,
-    summary: DownloadSummary
+    summary: SkillDownloadSummary
   ): Promise<void> {
     const entries = await this.client.listDirectory(sourceDirectory);
 

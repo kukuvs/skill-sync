@@ -1,28 +1,20 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import type { SkillLockSnapshot, SkillLockStorePort } from "../app/ports/skill-lock-store.js";
 import { SkillSyncError } from "../shared/errors.js";
 import { normalizeSkillPath } from "../shared/skill-path.js";
 
-export interface SkillLock {
-  skills: string[];
-}
-
-export interface SkillLockStoreLike {
-  add(skillPaths: string[]): Promise<SkillLock>;
-  read(): Promise<SkillLock>;
-}
-
 const lockFileName = "skill-lock.json";
 
-export class SkillLockStore implements SkillLockStoreLike {
+export class SkillLockStore implements SkillLockStorePort {
   constructor(private readonly cwd: string) {}
 
   get path(): string {
     return path.join(this.cwd, lockFileName);
   }
 
-  async read(): Promise<SkillLock> {
+  async read(): Promise<SkillLockSnapshot> {
     try {
       const content = await readFile(this.path, "utf8");
       const parsed = JSON.parse(content) as unknown;
@@ -43,12 +35,12 @@ export class SkillLockStore implements SkillLockStoreLike {
     }
   }
 
-  async write(lock: SkillLock): Promise<void> {
+  async write(lock: SkillLockSnapshot): Promise<void> {
     await mkdir(path.dirname(this.path), { recursive: true });
     await writeFile(this.path, `${JSON.stringify(lock, null, 2)}\n`, "utf8");
   }
 
-  async add(skillPaths: string[]): Promise<SkillLock> {
+  async add(skillPaths: string[]): Promise<SkillLockSnapshot> {
     const lock = await this.read();
     const seen = new Set(lock.skills);
 
@@ -64,7 +56,7 @@ export class SkillLockStore implements SkillLockStoreLike {
   }
 }
 
-function isSkillLock(value: unknown): value is SkillLock {
+function isSkillLock(value: unknown): value is SkillLockSnapshot {
   if (typeof value !== "object" || value === null || !("skills" in value)) {
     return false;
   }

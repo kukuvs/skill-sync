@@ -2,9 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import type { BitbucketEntry } from "../src/infrastructure/bitbucket-client.js";
-import { listSkillCandidates, type SkillCatalogSource } from "../src/app/list-skill-candidates.js";
+import { BitbucketSkillCatalog } from "../src/infrastructure/bitbucket-skill-catalog.js";
 
-void test("listSkillCandidates skips grouping directories and keeps real skills", async () => {
+void test("BitbucketSkillCatalog skips grouping directories and keeps real skills", async () => {
   const source = new FakeCatalog({
     "": [
       { path: "разработка", type: "commit_directory" },
@@ -26,7 +26,7 @@ void test("listSkillCandidates skips grouping directories and keeps real skills"
     "тестирование/jest-config": [{ path: "тестирование/jest-config/index.md", type: "commit_file" }]
   });
 
-  assert.deepEqual(await listSkillCandidates(source), [
+  assert.deepEqual(await new BitbucketSkillCatalog(source).listCandidates(), [
     "разработка/shared-empty",
     "разработка/x-uikit",
     "разработка/x-uikit/button",
@@ -34,7 +34,7 @@ void test("listSkillCandidates skips grouping directories and keeps real skills"
   ]);
 });
 
-class FakeCatalog implements SkillCatalogSource {
+class FakeCatalog {
   constructor(private readonly tree: Record<string, BitbucketEntry[]>) {}
 
   listDirectory(directoryPath: string): Promise<BitbucketEntry[]> {
