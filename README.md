@@ -20,7 +20,7 @@ npm install
 npm run build
 ```
 
-The package exposes the `skill-sync` binary from `dist/cli.js`.
+The package exposes the `skill-sync` binary from `dist/src/cli.js`.
 
 ## Configuration
 
