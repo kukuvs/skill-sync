@@ -5,17 +5,18 @@
 `skill-sync` is built around a small number of explicit boundaries:
 
 - `cli` parses flags, env, prompts, and command intent.
-- `app` owns one use-case per file: `AddSkillUseCase`, `SyncSkillsUseCase`, `SearchSkillsUseCase`.
-- `infrastructure` owns Bitbucket transport, local file writes, lock storage, and terminal helpers.
+- `app` owns one use-case per file, plus the ports they depend on.
+- `infrastructure` owns Bitbucket transport, local file writes, lock storage, and terminal adapters that implement those ports.
 - `shared` keeps cross-cutting utilities such as path safety, errors, logging, and package metadata.
 
-The command layer stays thin: it loads runtime config, builds a context, and hands off to one use-case. The app layer does not know Bitbucket pagination details, and the infrastructure layer does not decide business flow. That separation keeps changes local instead of growing a single service object.
+The command layer stays thin: it loads runtime config, asks a factory for the right use-case, and hands off control. The app layer does not know Bitbucket pagination details, and the infrastructure layer does not decide business flow. That separation keeps changes local instead of growing a single service object or a loosely typed dependency bag.
 
 ## Data flow
 
 ```text
 skill-sync add <path>
   -> load runtime config
+  -> SkillSyncUseCaseFactory.createAddSkillUseCase()
   -> AddSkillUseCase.execute()
   -> SkillDownloader.download()
   -> replace .skill/<path>
@@ -25,6 +26,7 @@ skill-sync add <path>
 ```text
 skill-sync sync
   -> load runtime config
+  -> SkillSyncUseCaseFactory.createSyncSkillsUseCase()
   -> SyncSkillsUseCase.execute()
   -> SkillLockStore.read()
   -> replace every skill directory sequentially
@@ -33,8 +35,9 @@ skill-sync sync
 ```text
 skill-sync search [filter]
   -> load runtime config
+  -> SkillSyncUseCaseFactory.createSearchSkillsUseCase()
   -> SearchSkillsUseCase.execute()
-  -> list Bitbucket skill candidates recursively
+  -> BitbucketSkillCatalog.listCandidates()
   -> update skill-lock.json
   -> download selected skills
 ```
@@ -59,7 +62,7 @@ Because replacement is atomic at the skill directory level, files deleted upstre
 
 ## Catalog filtering
 
-`search` uses `listSkillCandidates()` instead of exposing every directory. Directories with files are considered real skill candidates; empty leaf directories are also shown because Bitbucket repositories sometimes start with placeholder skills. Pure grouping directories with only child directories are skipped.
+`search` uses `BitbucketSkillCatalog` instead of exposing every directory. Directories with files are considered real skill candidates; empty leaf directories are also shown because Bitbucket repositories sometimes start with placeholder skills. Pure grouping directories with only child directories are skipped.
 
 ## Scaling points
 
