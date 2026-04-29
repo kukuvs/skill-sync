@@ -6,17 +6,28 @@ import { addSkillsToLock } from "../lockfile.js";
 import type { Logger } from "../logger.js";
 import { normalizeSkillPath } from "../paths.js";
 
+interface AddCommandDependencies {
+  addSkills: typeof addSkillsToLock;
+  download: typeof downloadSkill;
+}
+
+const defaultDependencies: AddCommandDependencies = {
+  addSkills: addSkillsToLock,
+  download: downloadSkill
+};
+
 export async function addCommand(
   skillPath: string,
   options: CliOptions,
-  logger: Logger
+  logger: Logger,
+  dependencies: AddCommandDependencies = defaultDependencies
 ): Promise<void> {
   const config = await loadConfig(options);
   const normalizedSkillPath = normalizeSkillPath(skillPath);
   const client = new BitbucketClient(config);
 
-  await addSkillsToLock(config.cwd, [normalizedSkillPath]);
-  const summary = await downloadSkill(client, config.cwd, normalizedSkillPath, logger);
+  const summary = await dependencies.download(client, config.cwd, normalizedSkillPath, logger);
+  await dependencies.addSkills(config.cwd, [normalizedSkillPath]);
 
   logger.info(`Added "${summary.skillPath}" and downloaded ${summary.files} file(s) into .skill/.`);
 }
