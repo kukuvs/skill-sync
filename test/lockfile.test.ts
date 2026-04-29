@@ -23,6 +23,19 @@ void test("addSkillsToLock keeps insertion order and skips duplicates", async ()
   }
 });
 
+void test("addSkillsToLock normalizes valid user-entered separators", async () => {
+  const cwd = await makeTempProject("lock-normalize-");
+
+  try {
+    await addSkillsToLock(cwd, ["\\разработка\\x-uikit\\button\\"]);
+
+    const lock = await readSkillLock(cwd);
+    assert.deepEqual(lock.skills, ["разработка/x-uikit/button"]);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
 async function makeTempProject(prefix: string): Promise<string> {
   const tmpRoot = path.join(process.cwd(), "tmp");
   await mkdir(tmpRoot, { recursive: true });
