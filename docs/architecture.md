@@ -73,3 +73,13 @@ Near-term extensions can be added without changing the whole project:
 - Bitbucket Server support can live beside the current Bitbucket Cloud client.
 - Richer search metadata can be added by returning typed tree nodes instead of plain paths.
 - Alternate lock storage backends can be introduced by swapping the store implementation injected by `SkillSyncUseCaseFactory`.
+
+## Test layout
+
+Tests are grouped by module boundary instead of staying in one flat folder:
+
+- `test/app` covers use-cases.
+- `test/cli` covers CLI-only concerns such as config loading.
+- `test/infrastructure` covers Bitbucket/filesystem/input adapters.
+- `test/shared` covers pure helpers.
+- `test/e2e` covers user-facing command flows with local fixtures.

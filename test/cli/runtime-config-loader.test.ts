@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { RuntimeConfigLoader } from "../src/cli/runtime-config.js";
+import { RuntimeConfigLoader } from "../../src/cli/runtime-config.js";
 
 void test("RuntimeConfigLoader parses Bitbucket Cloud repository URLs", () => {
   const loader = new RuntimeConfigLoader();

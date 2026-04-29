@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { BitbucketClient } from "../src/infrastructure/bitbucket-client.js";
+import { BitbucketClient } from "../../src/infrastructure/bitbucket-client.js";
 
 void test("BitbucketClient follows paginated directory responses", async () => {
   const restoreFetch = replaceFetch((url) => {
