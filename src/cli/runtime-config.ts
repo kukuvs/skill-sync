@@ -1,4 +1,4 @@
-import { askSecret, askText } from "../infrastructure/terminal/prompt.js";
+import { TerminalRuntimeConfigPrompts } from "../infrastructure/input/terminal-runtime-config-prompts.js";
 import { SkillSyncError } from "../shared/errors.js";
 
 export interface CliOptions {
@@ -20,19 +20,14 @@ export interface BitbucketRepo {
   workspace: string;
 }
 
-interface RuntimeConfigPrompts {
+export interface RuntimeConfigPrompts {
   askSecret(question: string): Promise<string>;
   askText(question: string): Promise<string>;
 }
 
-const defaultPrompts: RuntimeConfigPrompts = {
-  askSecret,
-  askText
-};
-
 export class RuntimeConfigLoader {
   constructor(
-    private readonly prompts: RuntimeConfigPrompts = defaultPrompts,
+    private readonly prompts: RuntimeConfigPrompts = new TerminalRuntimeConfigPrompts(),
     private readonly env: NodeJS.ProcessEnv = process.env
   ) {}
 
