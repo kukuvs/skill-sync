@@ -2,6 +2,7 @@ node_modules/
 .pnpm-store/
 dist/
 coverage/
+
 .env
 .env.*
 !.env.example
@@ -15,5 +16,12 @@ autogen/
 .codex/
 .ai/
 
+.idea/
+.vscode/
+
 *.log
 *.tsbuildinfo
+TEST*.xml
+
+.DS_Store
+Thumbs.db
