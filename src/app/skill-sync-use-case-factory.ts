@@ -1,9 +1,9 @@
 import type { RuntimeConfig } from "../cli/runtime-config.js";
 import { BitbucketClient } from "../infrastructure/bitbucket-client.js";
 import { BitbucketSkillCatalog } from "../infrastructure/bitbucket-skill-catalog.js";
+import { TerminalSkillSelector } from "../infrastructure/input/terminal-skill-selector.js";
 import { SkillDownloader } from "../infrastructure/skill-downloader.js";
 import { SkillLockStore } from "../infrastructure/skill-lock-store.js";
-import { TerminalSkillSelector } from "../infrastructure/terminal/selector.js";
 import type { Logger } from "../shared/logger.js";
 import { AddSkillUseCase } from "./add-skill-use-case.js";
 import { SearchSkillsUseCase } from "./search-skills-use-case.js";

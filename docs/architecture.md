@@ -6,7 +6,7 @@
 
 - `cli` parses flags, env, prompts, and command intent.
 - `app` owns one use-case per file, plus the ports they depend on.
-- `infrastructure` owns Bitbucket transport, local file writes, lock storage, and terminal adapters that implement those ports.
+- `infrastructure` owns Bitbucket transport, local file writes, lock storage, and input adapters that implement those ports.
 - `shared` keeps cross-cutting utilities such as path safety, errors, logging, and package metadata.
 
 The command layer stays thin: it loads runtime config, asks a factory for the right use-case, and hands off control. The app layer does not know Bitbucket pagination details, and the infrastructure layer does not decide business flow. That separation keeps changes local instead of growing a single service object or a loosely typed dependency bag.
@@ -68,8 +68,8 @@ Because replacement is atomic at the skill directory level, files deleted upstre
 
 Near-term extensions can be added without changing the whole project:
 
-- Auth providers can be added behind `loadConfig()`.
+- Auth providers can be added behind `RuntimeConfigLoader`.
 - Parallel downloads can be introduced inside `SkillDownloader` with a small concurrency limit.
 - Bitbucket Server support can live beside the current Bitbucket Cloud client.
 - Richer search metadata can be added by returning typed tree nodes instead of plain paths.
-- Alternate lock storage backends can be introduced by swapping the store implementation in `SkillSyncContext`.
+- Alternate lock storage backends can be introduced by swapping the store implementation injected by `SkillSyncUseCaseFactory`.
