@@ -18,21 +18,22 @@ The command layer does not know Bitbucket pagination details, and the API layer 
 skill-sync add <path>
   -> normalize skill path
   -> load Bitbucket config
-  -> add path to skill-lock.json
   -> list Bitbucket directory recursively
-  -> download files into .skill/<path>
+  -> download files into a staging directory
+  -> replace .skill/<path>
+  -> add path to skill-lock.json
 ```
 
 ```text
 skill-sync sync
   -> read skill-lock.json
   -> load Bitbucket config only when there is work to do
-  -> download every skill sequentially
+  -> replace every skill directory sequentially
 ```
 
 ```text
 skill-sync search [filter]
-  -> list Bitbucket directories recursively
+  -> list Bitbucket skill candidates recursively
   -> filter locally
   -> select many entries
   -> update skill-lock.json
@@ -51,9 +52,15 @@ Directory responses are paginated and collected until `next` is absent. File res
 
 ## Local writes
 
-Downloaded paths are resolved through `resolveInside()`. Any path that would escape `.skill/<skill-path>` is rejected before writing. Existing files are overwritten, but the downloader does not remove local files that no longer exist upstream.
+Downloaded paths are resolved through `resolveInside()`. Any path that would escape `.skill/<skill-path>` is rejected before writing.
 
-That choice is intentionally conservative: it updates current files without deleting user changes or local notes under `.skill/`.
+Each download is staged under `.skill/<parent>/.tmp-skill-sync-*`. After all files are written successfully, the previous skill directory is removed and the staging directory is renamed into place. If a download fails, the staging directory is cleaned up and the existing skill directory is left unchanged.
+
+Because replacement is atomic at the skill directory level, files deleted upstream do not remain as stale local files.
+
+## Catalog filtering
+
+`search` uses `listSkillCandidates()` instead of exposing every directory. Directories with files are considered real skill candidates; empty leaf directories are also shown because Bitbucket repositories sometimes start with placeholder skills. Pure grouping directories with only child directories are skipped.
 
 ## Scaling points
 
