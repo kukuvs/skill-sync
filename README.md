@@ -16,8 +16,8 @@ This keeps runtime behavior easy to inspect and avoids a dependency tree that wo
 ## Install for development
 
 ```bash
-npm install
-npm run build
+pnpm install
+pnpm run build
 ```
 
 The package exposes the `skill-sync` binary from `dist/src/cli.js`.
@@ -37,6 +37,10 @@ The token is sent as:
 ```text
 Authorization: Bearer <token>
 ```
+
+In non-interactive shells, set `BITBUCKET_TOKEN`; secret prompts are rejected without a TTY so tokens are not echoed into logs. `--token` exists for controlled local use, but environment variables are safer for repeatable runs.
+
+`--ref` has priority over `BITBUCKET_REF`. When neither is set, `main` is used.
 
 ## Commands
 
@@ -66,6 +70,12 @@ skill-sync --cwd ./another-project add тестирование/jest-config
 
 `add` preserves insertion order and skips duplicates. `sync` prints a warning and exits cleanly when the lock file is missing or empty.
 
+`add` updates the lock file only after the skill has downloaded successfully. Downloads are staged first and then replace the target `.skill/<skill-path>` directory, so stale files from older upstream versions are removed.
+
+## Search behavior
+
+`search` walks Bitbucket directories and shows skill candidates rather than every grouping folder. A directory is treated as a candidate when it contains files or has no child directories. This keeps top-level groups such as `разработка` out of the default selection list while still supporting nested skills like `разработка/x-uikit/button`.
+
 ## Repository layout
 
 ```text
@@ -89,9 +99,9 @@ Temporary local work belongs in `tmp/`; the directory is ignored by git.
 ## Quality checks
 
 ```bash
-npm run lint
-npm run format:check
-npm run test
+pnpm run lint
+pnpm run format:check
+pnpm run test
 ```
 
 Tests compile the TypeScript project and run Node's built-in test runner against `dist/test`.
