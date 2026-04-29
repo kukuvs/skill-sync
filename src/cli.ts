@@ -8,13 +8,14 @@ import { syncCommand } from "./commands/sync.js";
 import type { CliOptions } from "./config.js";
 import { SkillSyncError, toErrorMessage } from "./errors.js";
 import { consoleLogger } from "./logger.js";
+import { readPackageVersion } from "./package-version.js";
 
 const program = new Command();
 
 program
   .name("skill-sync")
   .description("Sync skills from a Bitbucket repository into the current project.")
-  .version("0.1.0")
+  .version(readPackageVersion())
   .option("--repo <url>", "Bitbucket repository URL")
   .option("--token <token>", "Bitbucket HTTP access token")
   .option("--ref <ref>", "Bitbucket branch, tag or commit")
