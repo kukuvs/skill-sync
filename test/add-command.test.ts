@@ -1,68 +1,78 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { addCommand } from "../src/commands/add.js";
-import { addSkillsToLock } from "../src/lockfile.js";
+import { SkillSyncService } from "../src/skill-sync-service.js";
 
-void test("addCommand keeps existing lock intact when download fails", async () => {
-  const cwd = await makeTempProject("add-fail-");
-  const previousRepo = process.env.BITBUCKET_REPO_URL;
-  const previousToken = process.env.BITBUCKET_TOKEN;
+void test("SkillSyncService keeps lock intact when add download fails", async () => {
+  const lockStore = new InMemoryLockStore(["existing/skill"]);
+  const downloader = new FailingDownloader();
 
-  process.env.BITBUCKET_REPO_URL = "https://bitbucket.org/team/skills-repo";
-  process.env.BITBUCKET_TOKEN = "token";
+  const service = new SkillSyncService(
+    {
+      cwd: process.cwd(),
+      ref: "main",
+      repo: { workspace: "team", repoSlug: "skills-repo" },
+      token: "token"
+    },
+    noopLogger,
+    {
+      createClient() {
+        return new FakeClient();
+      },
+      createDownloader() {
+        return downloader;
+      },
+      createLockStore() {
+        return lockStore;
+      },
+      listCandidates() {
+        return Promise.resolve([]);
+      },
+      selectMany() {
+        return Promise.resolve([]);
+      }
+    }
+  );
 
-  try {
-    await writeFile(
-      path.join(cwd, "skill-lock.json"),
-      `${JSON.stringify({ skills: ["existing/skill"] }, null, 2)}\n`,
-      "utf8"
-    );
-
-    await assert.rejects(
-      addCommand(
-        "missing/skill",
-        { cwd, repo: process.env.BITBUCKET_REPO_URL, token: "token" },
-        noopLogger,
-        {
-          addSkills: addSkillsToLock,
-          download: () => Promise.reject(new Error("download failed"))
-        }
-      ),
-      /download failed/
-    );
-
-    const lock = JSON.parse(await readFile(path.join(cwd, "skill-lock.json"), "utf8")) as {
-      skills: string[];
-    };
-
-    assert.deepEqual(lock.skills, ["existing/skill"]);
-  } finally {
-    restoreEnv("BITBUCKET_REPO_URL", previousRepo);
-    restoreEnv("BITBUCKET_TOKEN", previousToken);
-    await rm(cwd, { recursive: true, force: true });
-  }
+  await assert.rejects(service.add("missing/skill"), /download failed/);
+  assert.deepEqual(lockStore.skills, ["existing/skill"]);
+  assert.equal(lockStore.addCalls, 0);
 });
+
+class FakeClient {
+  downloadFile(): Promise<Uint8Array> {
+    return Promise.resolve(new Uint8Array());
+  }
+
+  listDirectory(): Promise<[]> {
+    return Promise.resolve([]);
+  }
+}
+
+class FailingDownloader {
+  download(): Promise<never> {
+    return Promise.reject(new Error("download failed"));
+  }
+}
+
+class InMemoryLockStore {
+  addCalls = 0;
+
+  constructor(readonly skills: string[]) {}
+
+  add(skillPaths: string[]): Promise<{ skills: string[] }> {
+    this.addCalls += 1;
+    this.skills.push(...skillPaths);
+    return Promise.resolve({ skills: [...this.skills] });
+  }
+
+  read(): Promise<{ skills: string[] }> {
+    return Promise.resolve({ skills: [...this.skills] });
+  }
+}
 
 const noopLogger = {
   info() {},
   warn() {},
   error() {}
 };
-
-async function makeTempProject(prefix: string): Promise<string> {
-  const tmpRoot = path.join(process.cwd(), "tmp");
-  await mkdir(tmpRoot, { recursive: true });
-  return mkdtemp(path.join(tmpRoot, prefix));
-}
-
-function restoreEnv(name: string, value: string | undefined): void {
-  if (value === undefined) {
-    delete process.env[name];
-    return;
-  }
-
-  process.env[name] = value;
-}

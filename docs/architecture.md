@@ -5,37 +5,38 @@
 `skill-sync` is built around a small number of explicit boundaries:
 
 - CLI commands parse intent and coordinate work.
+- `SkillSyncService` owns the application use-cases for `add`, `sync`, and `search`.
 - `BitbucketClient` owns the REST API details.
-- `downloader` maps Bitbucket entries to local files.
-- `lockfile` owns `skill-lock.json` parsing and writing.
+- `SkillDownloader` maps Bitbucket entries to local files.
+- `SkillLockStore` owns `skill-lock.json` parsing and writing.
 - `paths` keeps path normalization and write-safety checks in one place.
 
-The command layer does not know Bitbucket pagination details, and the API layer does not write to disk. That separation keeps the CLI easy to extend without turning command handlers into large scripts.
+The command layer stays thin: it loads runtime config and hands off to the service layer. The service layer does not know Bitbucket pagination details, and the API layer does not write to disk. That separation keeps the CLI easy to extend without turning command handlers into large scripts.
 
 ## Data flow
 
 ```text
 skill-sync add <path>
-  -> normalize skill path
-  -> load Bitbucket config
-  -> list Bitbucket directory recursively
-  -> download files into a staging directory
+  -> load runtime config
+  -> SkillSyncService.add()
+  -> SkillDownloader.download()
   -> replace .skill/<path>
-  -> add path to skill-lock.json
+  -> SkillLockStore.add()
 ```
 
 ```text
 skill-sync sync
-  -> read skill-lock.json
-  -> load Bitbucket config only when there is work to do
+  -> load runtime config
+  -> SkillSyncService.sync()
+  -> SkillLockStore.read()
   -> replace every skill directory sequentially
 ```
 
 ```text
 skill-sync search [filter]
+  -> load runtime config
+  -> SkillSyncService.search()
   -> list Bitbucket skill candidates recursively
-  -> filter locally
-  -> select many entries
   -> update skill-lock.json
   -> download selected skills
 ```
@@ -67,6 +68,7 @@ Because replacement is atomic at the skill directory level, files deleted upstre
 Near-term extensions can be added without changing the whole project:
 
 - Auth providers can be added behind `loadConfig()`.
-- Parallel downloads can be introduced inside `downloader` with a small concurrency limit.
+- Parallel downloads can be introduced inside `SkillDownloader` with a small concurrency limit.
 - Bitbucket Server support can live beside the current Bitbucket Cloud client.
 - Richer search metadata can be added by returning typed tree nodes instead of plain paths.
+- Alternate lock storage backends can be introduced by swapping the store implementation used by `SkillSyncService`.

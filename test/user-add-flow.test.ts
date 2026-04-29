@@ -4,8 +4,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { addCommand } from "../src/commands/add.js";
-import { downloadSkill } from "../src/downloader.js";
-import { addSkillsToLock } from "../src/lockfile.js";
+import { SkillDownloader } from "../src/downloader.js";
+import { SkillLockStore } from "../src/lockfile.js";
+import { SkillSyncService } from "../src/skill-sync-service.js";
 import { LocalSkillSource } from "./support/local-skill-source.js";
 
 void test("user adds a fixture skill into a clean project", async () => {
@@ -18,9 +19,24 @@ void test("user adds a fixture skill into a clean project", async () => {
       { cwd, repo: repoUrl, token: "token" },
       noopLogger,
       {
-        addSkills: addSkillsToLock,
-        download: (_client, projectDir, skillPath, logger) =>
-          downloadSkill(source, projectDir, skillPath, logger)
+        createService: (config, logger) =>
+          new SkillSyncService(config, logger, {
+            createClient() {
+              return source;
+            },
+            createDownloader(client, projectDir, downloadLogger) {
+              return new SkillDownloader(client, projectDir, downloadLogger);
+            },
+            createLockStore(projectDir) {
+              return new SkillLockStore(projectDir);
+            },
+            listCandidates() {
+              return Promise.resolve([]);
+            },
+            selectMany() {
+              return Promise.resolve([]);
+            }
+          })
       }
     );
 

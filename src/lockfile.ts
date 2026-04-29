@@ -10,52 +10,69 @@ export interface SkillLock {
 
 const lockFileName = "skill-lock.json";
 
+export class SkillLockStore {
+  constructor(private readonly cwd: string) {}
+
+  get path(): string {
+    return path.join(this.cwd, lockFileName);
+  }
+
+  async read(): Promise<SkillLock> {
+    try {
+      const content = await readFile(this.path, "utf8");
+      const parsed = JSON.parse(content) as unknown;
+
+      if (!isSkillLock(parsed)) {
+        throw new SkillSyncError(`${lockFileName} must contain a "skills" string array.`);
+      }
+
+      return {
+        skills: parsed.skills.map(normalizeSkillPath)
+      };
+    } catch (error) {
+      if (isNodeError(error) && error.code === "ENOENT") {
+        return { skills: [] };
+      }
+
+      throw error;
+    }
+  }
+
+  async write(lock: SkillLock): Promise<void> {
+    await mkdir(path.dirname(this.path), { recursive: true });
+    await writeFile(this.path, `${JSON.stringify(lock, null, 2)}\n`, "utf8");
+  }
+
+  async add(skillPaths: string[]): Promise<SkillLock> {
+    const lock = await this.read();
+    const seen = new Set(lock.skills);
+
+    for (const skillPath of skillPaths.map(normalizeSkillPath)) {
+      if (!seen.has(skillPath)) {
+        lock.skills.push(skillPath);
+        seen.add(skillPath);
+      }
+    }
+
+    await this.write(lock);
+    return lock;
+  }
+}
+
 export function getLockFilePath(cwd: string): string {
-  return path.join(cwd, lockFileName);
+  return new SkillLockStore(cwd).path;
 }
 
 export async function readSkillLock(cwd: string): Promise<SkillLock> {
-  const lockPath = getLockFilePath(cwd);
-
-  try {
-    const content = await readFile(lockPath, "utf8");
-    const parsed = JSON.parse(content) as unknown;
-
-    if (!isSkillLock(parsed)) {
-      throw new SkillSyncError(`${lockFileName} must contain a "skills" string array.`);
-    }
-
-    return {
-      skills: parsed.skills.map(normalizeSkillPath)
-    };
-  } catch (error) {
-    if (isNodeError(error) && error.code === "ENOENT") {
-      return { skills: [] };
-    }
-
-    throw error;
-  }
+  return new SkillLockStore(cwd).read();
 }
 
 export async function writeSkillLock(cwd: string, lock: SkillLock): Promise<void> {
-  const lockPath = getLockFilePath(cwd);
-  await mkdir(path.dirname(lockPath), { recursive: true });
-  await writeFile(lockPath, `${JSON.stringify(lock, null, 2)}\n`, "utf8");
+  await new SkillLockStore(cwd).write(lock);
 }
 
 export async function addSkillsToLock(cwd: string, skillPaths: string[]): Promise<SkillLock> {
-  const lock = await readSkillLock(cwd);
-  const seen = new Set(lock.skills);
-
-  for (const skillPath of skillPaths.map(normalizeSkillPath)) {
-    if (!seen.has(skillPath)) {
-      lock.skills.push(skillPath);
-      seen.add(skillPath);
-    }
-  }
-
-  await writeSkillLock(cwd, lock);
-  return lock;
+  return new SkillLockStore(cwd).add(skillPaths);
 }
 
 function isSkillLock(value: unknown): value is SkillLock {
