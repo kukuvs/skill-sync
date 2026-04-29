@@ -1,19 +1,14 @@
-import { BitbucketClient } from "../bitbucket.js";
-import type { CliOptions } from "../config.js";
+import type { CliOptions, RuntimeConfig } from "../config.js";
 import { loadConfig } from "../config.js";
-import { downloadSkill } from "../downloader.js";
-import { addSkillsToLock } from "../lockfile.js";
 import type { Logger } from "../logger.js";
-import { normalizeSkillPath } from "../paths.js";
+import { SkillSyncService } from "../skill-sync-service.js";
 
 interface AddCommandDependencies {
-  addSkills: typeof addSkillsToLock;
-  download: typeof downloadSkill;
+  createService: typeof createSkillSyncService;
 }
 
 const defaultDependencies: AddCommandDependencies = {
-  addSkills: addSkillsToLock,
-  download: downloadSkill
+  createService: createSkillSyncService
 };
 
 export async function addCommand(
@@ -23,11 +18,10 @@ export async function addCommand(
   dependencies: AddCommandDependencies = defaultDependencies
 ): Promise<void> {
   const config = await loadConfig(options);
-  const normalizedSkillPath = normalizeSkillPath(skillPath);
-  const client = new BitbucketClient(config);
+  const service = dependencies.createService(config, logger);
+  await service.add(skillPath);
+}
 
-  const summary = await dependencies.download(client, config.cwd, normalizedSkillPath, logger);
-  await dependencies.addSkills(config.cwd, [normalizedSkillPath]);
-
-  logger.info(`Added "${summary.skillPath}" and downloaded ${summary.files} file(s) into .skill/.`);
+function createSkillSyncService(config: RuntimeConfig, logger: Logger) {
+  return new SkillSyncService(config, logger);
 }

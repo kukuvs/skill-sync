@@ -72,6 +72,8 @@ skill-sync --cwd ./another-project add тестирование/jest-config
 
 `add` updates the lock file only after the skill has downloaded successfully. Downloads are staged first and then replace the target `.skill/<skill-path>` directory, so stale files from older upstream versions are removed.
 
+The command layer stays intentionally thin. `SkillSyncService` now owns the application workflow, while `SkillDownloader`, `SkillLockStore`, and `BitbucketClient` keep transport, filesystem, and storage concerns separate.
+
 ## Search behavior
 
 `search` walks Bitbucket directories and shows skill candidates rather than every grouping folder. A directory is treated as a candidate when it contains files or has no child directories. This keeps top-level groups such as `разработка` out of the default selection list while still supporting nested skills like `разработка/x-uikit/button`.
@@ -88,6 +90,7 @@ src/
   paths.ts
   prompt.ts
   selector.ts
+  skill-sync-service.ts
   commands/
 test/
 docs/
