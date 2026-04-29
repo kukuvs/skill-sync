@@ -16,6 +16,10 @@ void test("normalizeSkillPath rejects traversal", () => {
   assert.throws(() => normalizeSkillPath("skills/../secret"), /unsafe segment/);
 });
 
+void test("normalizeSkillPath rejects empty user input", () => {
+  assert.throws(() => normalizeSkillPath("   "), /empty/);
+});
+
 void test("resolveInside refuses paths outside the base directory", () => {
   assert.throws(() => resolveInside("tmp/base", "../outside"), /outside/);
 });
